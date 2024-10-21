@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task Manager</title>
+  <script src="/finalllll.js"></script> <!-- Connects JS file -->
+  <style>
+    /* General styles */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f4;
+  margin: 0;
+  padding: 20px;
+  color: #333;
+}
+
+h1, h2 {
+  color: #4CAF50;
+}
+
+h1 {
+  text-align: center;
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+}
+
+h2 {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+}
+
+form {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  max-width: 500px;
+}
+
+label {
+  font-weight: bold;
+  margin-right: 10px;
+  color: #555;
+}
+
+input[type="text"],
+input[type="date"],
+textarea {
+  width: calc(100% - 20px);
+  padding: 8px;
+  margin-top: 5px;
+  margin-bottom: 15px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+input[type="checkbox"] {
+  margin-left: 5px;
+}
+
+textarea {
+  resize: vertical;
+  height: 80px;
+}
+
+button {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #45a049;
+}
+
+button[type="submit"] {
+  margin-top: 10px;
+}
+
+/* Style for output and views */
+#output {
+  background-color: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  margin-top: 20px;
+}
+
+#viewProjects {
+  background-color: #2196F3;
+  padding: 10px 15px;
+  margin-bottom: 20px;
+}
+
+#viewProjects:hover {
+  background-color: #1976D2;
+}
+
+
+  </style>
+</head>
+<body>
+  <h1>Task Manager</h1>
+
+  <h2>Create New Project</h2>
+  <form id="projectForm" action="/projects" method="post">
+      <label>Project Name: </label>
+      <input type="text" name="projectName" required><br> <!-- name added -->
+      <label>Project Priority: </label>
+      <input type="text" name="projectPrio" required><br> <!-- name added -->
+      <label>Project ID: </label>
+      <input type="text" name="projectID" required><br> <!-- name added -->
+      <button type="submit">Create Project</button>
+  </form>
+  
+  <h2>Create New Task</h2>
+  <form id="taskForm" action="/tasks" method="post">
+      <label>Task Name: </label>
+      <input type="text" name="taskName" required><br> <!-- name added -->
+      <label>Task Start Date: </label>
+      <input type="date" name="taskStartDate" required><br> <!-- name added -->
+      <label>Task Due Date: </label>
+      <input type="date" name="taskDueDate" required><br> <!-- name added -->
+      <label>Task Priority: </label>
+      <input type="text" name="taskPriority" required><br> <!-- name added -->
+      <label>Project ID: </label>
+      <input type="text" name="projectID" required><br> <!-- name added -->
+      <label>Task Done: </label>
+      <input type="checkbox" name="taskDone"><br> <!-- name added -->
+      <label>Notes: </label>
+      <textarea name="notes"></textarea><br> <!-- name added -->
+      <button type="submit">Create Task</button>
+  </form>
+  
+
+  <h2>View Projects</h2>
+  <button id="viewProjects">View All Projects</button>
+  <div id="projectsList"></div> <!-- Area to display the list of projects -->
+  
+  <h2>View Tasks for a Project</h2>
+  <form id="viewTasksForm" action="/tasks" method="get">
+      <label>Project ID: </label>
+      <input type="text" name="projectID" id="viewProjectID" required><br> <!-- Added name attribute -->
+      <button type="submit">View Tasks</button>
+  </form>
+  <div id="tasksList"></div> <!-- Area to display tasks for a specific project -->
+  
+
+  <div id="output"></div> <!-- Where responses will be displayed -->
+  <script>
+    // Fetch and display all projects
+    document.getElementById('viewProjects').addEventListener('click', function() {
+        fetch('/projects')
+            .then(response => response.json())
+            .then(data => {
+                const projectsList = document.getElementById('projectsList');
+                projectsList.innerHTML = ''; // Clear previous results
+                data.forEach(project => {
+                    const projectDiv = document.createElement('div');
+                    projectDiv.innerHTML = `Project ID: ${project.projectID}, Name: ${project.projectName}, Priority: ${project.projectPrio}`;
+                    projectsList.appendChild(projectDiv);
+                });
+            })
+            .catch(error => console.error('Error fetching projects:', error));
+    });
+
+    // Handle viewing tasks for a specific project
+    document.getElementById('viewTasksForm').addEventListener('submit', function(event) {
+        event.preventDefault(); // Prevent the form from submitting the traditional way
+
+        const projectID = document.getElementById('viewProjectID').value;
+
+        fetch(`/tasks?projectID=${projectID}`)
+            .then(response => response.json())
+            .then(data => {
+                const tasksList = document.getElementById('tasksList');
+                tasksList.innerHTML = ''; // Clear previous results
+                if (data.length === 0) {
+                    tasksList.innerHTML = 'No tasks found for this project.';
+                    return;
+                }
+                data.forEach(task => {
+                    const taskDiv = document.createElement('div');
+                    taskDiv.innerHTML = `Task Name: ${task.taskName}, Start Date: ${task.taskStartDate}, Due Date: ${task.taskDueDate}, Priority: ${task.taskPriority}, Done: ${task.taskDone}, Notes: ${task.notes}`;
+                    tasksList.appendChild(taskDiv);
+                });
+            })
+            .catch(error => console.error('Error fetching tasks:', error));
+    });
+  </script>
+</body>
+</html>
